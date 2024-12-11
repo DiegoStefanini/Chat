@@ -1,13 +1,15 @@
 package data;
 
-import java.util.ArrayList;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class Packet {
-    private String header; // LOGIN, LOGOUT; REGISTRA; AVVIACHAT; MESSAGGIO; CREAGRUPPO; NOTIFICATION; CHAT; GETSTORICO
-    private String destinatario;
-    private String mittente;
-    private String contenuto;
-    private boolean errore;
+    public String header; // LOGIN, LOGOUT; REGISTRA; AVVIACHAT; MESSAGGIO; CREAGRUPPO; NOTIFICATION; CHAT; GETSTORICO
+    public String destinatario;
+    public String mittente;
+    public String contenuto;
+    public boolean errore;
+
     public Packet(String h, String d, String m, String c, boolean e) {
         this.header = h;
         this.destinatario = d;
@@ -16,23 +18,44 @@ public class Packet {
         this.errore = e;
     }
 
-    public boolean getError() {return errore; }
-    public void setErrore(boolean come) {
-        this.errore = come;
+    public boolean getError() {
+        return errore;
     }
-    public String getHeader() { return header; }
-    public void setType(String header) { this.header = header; }
 
-    public String getMittente() { return mittente; }
-    public void setMittente(String sender) { this.mittente = sender; }
+    public void setErrore(boolean errore) {
+        this.errore = errore;
+    }
+
+    public String getHeader() {
+        return header;
+    }
+
+    public void setHeader(String header) {
+        this.header = header;
+    }
+
+    public String getMittente() {
+        return mittente;
+    }
+
+    public void setMittente(String mittente) {
+        this.mittente = mittente;
+    }
 
     public String getDestinatario() {
         return destinatario;
     }
-    public void addDestinatario(String dest) {
-        destinatario = dest;
+
+    public void setDestinatario(String destinatario) {
+        this.destinatario = destinatario;
     }
 
-    public String getContenuto() { return contenuto; }
-    public void setContenuto(String content) { this.contenuto = content; }
+    public String getContenuto() {
+        return contenuto;
+    }
+
+    public void setContenuto(String contenuto) {
+        this.contenuto = contenuto;
+    }
+
 }
