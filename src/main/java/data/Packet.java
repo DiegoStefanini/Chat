@@ -1,7 +1,5 @@
 package data;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 public class Packet {
     public String header; // LOGIN, LOGOUT; REGISTRA; AVVIACHAT; MESSAGGIO; CREAGRUPPO; NOTIFICATION; CHAT; GETSTORICO

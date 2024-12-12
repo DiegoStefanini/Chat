@@ -1,49 +1,161 @@
 package client;
 
+import data.Packet;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import javafx.geometry.Pos;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import com.google.gson.Gson;
 
 public class ChatPage extends Application {
 
-    @Override
-    public void start(Stage stage) {
+    private Gson gson;
+    private PrintWriter MandaAlServer;
+    private BufferedReader RiceviDalServer;
+    private String NomeClient;
+    private Stage Chatsstage;
+    public ChatPage(PrintWriter manda, BufferedReader leggi, Gson g, String nome) {
+        MandaAlServer = manda;
+        RiceviDalServer = leggi;
+        gson = g;
+        NomeClient = nome;
+    }
+
+    public void start(Stage stage) throws IOException {
+        Packet pacchetto;
+        Chatsstage = stage;
         // Creazione dei componenti per la schermata della chat
         ListView<String> chatListView = new ListView<>();
-        chatListView.getItems().addAll("Chat 1", "Chat 2", "Chat 3");
+        pacchetto = new Packet("CHAT", "", "", "", false);
+        String json = gson.toJson(pacchetto); // converto il pacchetto in JSON
+        MandaAlServer.println(json);
+        json = RiceviDalServer.readLine();
+        pacchetto = gson.fromJson(json, Packet.class);
 
-        Button selectChatButton = new Button("Seleziona Chat");
+        String[] Chats = pacchetto.getContenuto().split(",\\s*");
+        if (Chats.length > 0)
+            for (String chat : Chats) { // per ogni elemento di Chats identificato come chat
+                chatListView.getItems().add(chat);
+            }
 
-        // Layout della schermata della chat
-        VBox chatLayout = new VBox(10);
-        chatLayout.getChildren().addAll(new Label("Seleziona una chat:"), chatListView, selectChatButton);
+        // Campo di testo per la ricerca dell'utente
+        TextField searchField = new TextField();
+        searchField.setPromptText("Cerca utente");
 
-        // Azione del bottone per selezionare la chat
-        selectChatButton.setOnAction(e -> {
-            String selectedChat = chatListView.getSelectionModel().getSelectedItem();
-            if (selectedChat != null) {
-                openChatWindow(selectedChat); // Seleziona la chat e apri la finestra della chat
-            } else {
-                showAlert("Errore", "Seleziona una chat!");
+        // Bottone con la scritta "Cerca"
+        Button searchButton = new Button("Cerca");
+
+        // Azione del bottone di ricerca
+        searchButton.setOnAction(e -> {
+            try {
+                cercaUser(searchField.getText(), chatListView);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
             }
         });
 
+        // Layout per la ricerca, centrato orizzontalmente
+        HBox searchLayout = new HBox(10, searchField, searchButton);
+        searchLayout.setAlignment(Pos.CENTER); // Allinea gli elementi al centro
+
+        // Bottone per creare un gruppo
+        Button createGroupButton = new Button("Crea Gruppo");
+        createGroupButton.setOnAction(e -> createGroup());
+
+        // Layout della schermata della chat
+        VBox chatLayout = new VBox(10);
+        chatLayout.setAlignment(Pos.CENTER); // Centra tutti gli elementi della VBox
+
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS); // mette uno spazio tra Bottone cerca gruppo e la fine
+
+        chatLayout.getChildren().addAll( // mette in ordine tutti gli elementi della pagina
+                new Label("Cerca un utente:"),
+                searchLayout, // Campo di ricerca
+                chatListView,
+                createGroupButton,
+                spacer
+        );
+
+        // Gestore per doppio click
+        chatListView.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2) {
+                String selectedChat = chatListView.getSelectionModel().getSelectedItem();
+                if (selectedChat != null) {
+                    try {
+                        openChatWindow(selectedChat); // Seleziona la chat e apri la finestra della chat
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                } else {
+                    showAlert("Errore", "Seleziona una chat!");
+                }
+            }
+        });
+
+        // Gestore per il tasto invio
+        chatListView.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER) {
+                String selectedChat = chatListView.getSelectionModel().getSelectedItem();
+                if (selectedChat != null) {
+                    try {
+                        openChatWindow(selectedChat); // Seleziona la chat e apri la finestra della chat
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                } else {
+                    showAlert("Errore", "Seleziona una chat!");
+                }
+            }
+        });
+
+        // Impostazione della scena e visualizzazione
         Scene scene = new Scene(chatLayout, 400, 300);
-        stage.setTitle("Seleziona una Chat");
+        stage.setTitle("SRPgram");
         stage.setScene(scene);
         stage.show();
     }
 
+    // Metodo per la ricerca dell'utente
+    private void cercaUser(String target, ListView<String> lista) throws IOException {
+        // Puoi implementare la logica per la ricerca dell'utente
+        for (String chat : lista.getItems()) {
+            if (target.equals(chat)) {
+                showAlert("ERRORE","Hai già una chat avviata con questo utente");
+                return;
+            }
+        }
+        Packet pacchetto = new Packet("AVVIACHAT", target, NomeClient, "", false);
+        String json = gson.toJson(pacchetto); // converto il pacchetto in JSON
+        MandaAlServer.println(json);
+        json = RiceviDalServer.readLine();
+        pacchetto = gson.fromJson(json, Packet.class);
+        if (pacchetto.getError()) {
+            showAlert("Errore", pacchetto.getContenuto());
+        } else {
+                lista.getItems().add(target);
+        }
+    }
+
+    // Metodo per creare un gruppo
+    private void createGroup() {
+        // Puoi implementare la logica per la creazione di un gruppo
+
+    }
+
     // Metodo per aprire la finestra della chat specifica
-    private void openChatWindow(String chatName) {
+    private void openChatWindow(String target) throws IOException {
         // Puoi implementare una nuova finestra di chat in base al nome della chat
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Chat Selezionata");
-        alert.setHeaderText(null);
-        alert.setContentText("Sei entrato nella chat: " + chatName);
-        alert.showAndWait();
+        MandaMessaggi mandamessaggi = new MandaMessaggi(MandaAlServer, RiceviDalServer, gson, NomeClient, target, Chatsstage);
+        mandamessaggi.start(new Stage());
+        Chatsstage.close();
     }
 
     // Metodo per mostrare un alert in caso di errore
@@ -55,7 +167,7 @@ public class ChatPage extends Application {
         alert.showAndWait();
     }
 
-//    public static void main(String[] args) {
-//        launch(args);
-//    }
+    // public static void main(String[] args) {
+    //     launch(args);
+    // }
 }
