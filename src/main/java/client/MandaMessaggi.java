@@ -2,6 +2,7 @@ package client;
 
 import data.Packet;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -79,7 +80,7 @@ public class MandaMessaggi extends Application {
                     // Mostrare il messaggio nella chat
                     chatListView.getItems().add("Tu: " + message);
                     inputField.clear();
-                    inputField.setPromptText("Scrivi un messaggio...");
+
 
                 }
             }
@@ -92,8 +93,10 @@ public class MandaMessaggi extends Application {
                     String json = RiceviDalServer.readLine();
                     if (json != null) {
                         Packet pacchetto = gson.fromJson(json, Packet.class);
-                        if ("MESSAGGIO".equals(pacchetto.getHeader())) {
-                            chatListView.getItems().add(pacchetto.getMittente() + ": " + pacchetto.getContenuto());
+                        if ("MESSAGGIO".equals(pacchetto.getHeader()) && pacchetto.getMittente().equals(Target)) {
+                            Platform.runLater(() -> {
+                                chatListView.getItems().add(pacchetto.getMittente() + ": " + pacchetto.getContenuto());
+                            });
                         }
                     }
                 }
