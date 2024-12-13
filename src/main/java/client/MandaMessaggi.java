@@ -85,7 +85,9 @@ public class MandaMessaggi extends Application {
                 }
             }
         });
-
+        Packet pacch = new Packet("CARICAMESSAGGI", Target, NomeClient, "", false);
+        String tosend = gson.toJson(pacch);
+        MandaAlServer.println(tosend);
         // Ricezione dei messaggi (simulazione)
         new Thread(() -> {
             try {
@@ -97,6 +99,13 @@ public class MandaMessaggi extends Application {
                             Platform.runLater(() -> {
                                 chatListView.getItems().add(pacchetto.getMittente() + ": " + pacchetto.getContenuto());
                             });
+                        } else if ("CARICAMESSAGGI".equals(pacchetto.getHeader())) {
+                            String[] Messaggi = pacchetto.getContenuto().split("/ù\\s*");
+                            if (Messaggi.length > 0) {
+                                for (String messaggio : Messaggi) {
+                                    chatListView.getItems().add(messaggio);
+                                }
+                            }
                         }
                     }
                 }
