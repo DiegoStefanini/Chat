@@ -29,7 +29,11 @@ public class ClientMain extends Application {
         } catch (InterruptedException _) {
         }
     }
-
+    public void stop() throws Exception {
+        Packet DaInviareAlServer = new Packet("LOGOUT", "", "", "", false);
+        String json = gson.toJson(DaInviareAlServer);
+        MandaAlServer.println(json);
+    }
     public void start(Stage stage) throws IOException {
         primaryStage = stage;
         gson = new Gson();

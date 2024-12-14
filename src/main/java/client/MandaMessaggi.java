@@ -32,6 +32,12 @@ public class MandaMessaggi extends Application {
         Target = tar;
         Precedente = prec;
     }
+    public void attendi(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException _) {
+        }
+    }
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -59,9 +65,11 @@ public class MandaMessaggi extends Application {
         layout.setTop(topBar);
         layout.setCenter(chatListView);
         layout.setBottom(inputField);
-
         // Azioni sul pulsante "Indietro"
         indietroButton.setOnAction(e -> {
+            Packet pacchetto = new Packet("INTERROMPI", Target, NomeClient, "", false);
+            String json = gson.toJson(pacchetto);
+            MandaAlServer.println(json);
             ricezione = false;
             Precedente.show();
             stage.close(); // Esempio: chiudi la finestra
@@ -89,7 +97,7 @@ public class MandaMessaggi extends Application {
         Packet pacch = new Packet("CARICAMESSAGGI", Target, NomeClient, "", false);
         String tosend = gson.toJson(pacch);
         MandaAlServer.println(tosend);
-        chatListView.getItems().clear(); // Ripulisce la lista dei messaggi
+        chatListView.getItems().clear(); // Ripulisce la lista  dei messaggi
 
         new Thread(() -> {
             try {
@@ -104,17 +112,19 @@ public class MandaMessaggi extends Application {
                         } else if ("CARICAMESSAGGI".equals(pacchetto.getHeader())) {
                                 String[] Messaggi = pacchetto.getContenuto().split("/ù\\s*");
 
-                                if (Messaggi.length > 0) {
+                                if (Messaggi.length > 0 && !"".equals(Messaggi[0])) {
                                     for (String messaggio : Messaggi) {
                                         Platform.runLater(() -> {
-                                            System.out.println("Stampa");
                                             chatListView.getItems().add(messaggio);
                                         });
                                     }
                                 }
+                        } else if ("INTERROMPI".equals(pacchetto.getHeader())) {
+                            ricezione = false;
                         }
                     }
                 }
+
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
