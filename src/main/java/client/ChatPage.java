@@ -12,6 +12,10 @@ import javafx.geometry.Pos;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import com.google.gson.Gson;
 
 public class ChatPage extends Application {
@@ -21,6 +25,7 @@ public class ChatPage extends Application {
     private BufferedReader RiceviDalServer;
     private String NomeClient;
     private Stage Chatsstage;
+    private boolean ricezione;
     public ChatPage(PrintWriter manda, BufferedReader leggi, Gson g, String nome) {
         MandaAlServer = manda;
         RiceviDalServer = leggi;
@@ -33,6 +38,8 @@ public class ChatPage extends Application {
         Chatsstage = stage;
         // Creazione dei componenti per la schermata della chat
         ListView<String> chatListView = new ListView<>();
+
+
         pacchetto = new Packet("CHAT", "", "", "", false);
         String json = gson.toJson(pacchetto); // converto il pacchetto in JSON
         MandaAlServer.println(json);
@@ -43,8 +50,14 @@ public class ChatPage extends Application {
         if (Chats.length > 0)
             for (String chat : Chats) { // per ogni elemento di Chats identificato come chat
                 chatListView.getItems().add(chat);
-            }
 
+            }
+//        ricezione = true;
+//        new Thread(() -> {
+//            while (ricezione) {
+//
+//            }
+//        } ).start();
         // Campo di testo per la ricerca dell'utente
         TextField searchField = new TextField();
         searchField.setPromptText("Cerca utente");
@@ -152,7 +165,6 @@ public class ChatPage extends Application {
 
     // Metodo per aprire la finestra della chat specifica
     private void openChatWindow(String target) throws IOException {
-        // Puoi implementare una nuova finestra di chat in base al nome della chat
         MandaMessaggi mandamessaggi = new MandaMessaggi(MandaAlServer, RiceviDalServer, gson, NomeClient, target, Chatsstage);
         mandamessaggi.start(new Stage());
         Chatsstage.close();
@@ -167,7 +179,4 @@ public class ChatPage extends Application {
         alert.showAndWait();
     }
 
-    // public static void main(String[] args) {
-    //     launch(args);
-    // }
 }

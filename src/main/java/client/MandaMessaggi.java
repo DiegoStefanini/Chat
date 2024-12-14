@@ -37,6 +37,7 @@ public class MandaMessaggi extends Application {
     public void start(Stage stage) throws IOException {
         // Creazione dei componenti per la schermata della chat
         ListView<String> chatListView = new ListView<>();
+
         TextField inputField = new TextField();
         Button indietroButton = new Button("Indietro");
         Label titleLabel = new Label(Target);
@@ -88,7 +89,8 @@ public class MandaMessaggi extends Application {
         Packet pacch = new Packet("CARICAMESSAGGI", Target, NomeClient, "", false);
         String tosend = gson.toJson(pacch);
         MandaAlServer.println(tosend);
-        // Ricezione dei messaggi (simulazione)
+        chatListView.getItems().clear(); // Ripulisce la lista dei messaggi
+
         new Thread(() -> {
             try {
                 while (ricezione) {
@@ -100,12 +102,16 @@ public class MandaMessaggi extends Application {
                                 chatListView.getItems().add(pacchetto.getMittente() + ": " + pacchetto.getContenuto());
                             });
                         } else if ("CARICAMESSAGGI".equals(pacchetto.getHeader())) {
-                            String[] Messaggi = pacchetto.getContenuto().split("/ù\\s*");
-                            if (Messaggi.length > 0) {
-                                for (String messaggio : Messaggi) {
-                                    chatListView.getItems().add(messaggio);
+                                String[] Messaggi = pacchetto.getContenuto().split("/ù\\s*");
+
+                                if (Messaggi.length > 0) {
+                                    for (String messaggio : Messaggi) {
+                                        Platform.runLater(() -> {
+                                            System.out.println("Stampa");
+                                            chatListView.getItems().add(messaggio);
+                                        });
+                                    }
                                 }
-                            }
                         }
                     }
                 }
