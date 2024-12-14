@@ -1,0 +1,1 @@
+Come startare l'applicazione: 
