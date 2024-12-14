@@ -30,35 +30,18 @@ public class ClientMain extends Application {
         }
     }
     public void stop() throws Exception {
-        Packet DaInviareAlServer = new Packet("LOGOUT", "", "", "", false);
-        String json = gson.toJson(DaInviareAlServer);
-        MandaAlServer.println(json);
+        if (link != null) {
+            Packet DaInviareAlServer = new Packet("LOGOUT", "", "", "", false);
+            String json = gson.toJson(DaInviareAlServer);
+            MandaAlServer.println(json);
+        }
     }
     public void start(Stage stage) throws IOException {
         primaryStage = stage;
         gson = new Gson();
-        String serverAddress = "127.0.0.1"; // IP del server (localhost)
+        String serverAddress = "127.0.0.1"; // IP del server
         int port = 12345;
 
-        int i = 0;
-        while (link == null && i < 3) {
-            try {
-                // Crea una connessione al server
-                link = new Socket(serverAddress, port);
-            } catch (IOException ex) {
-                showAlert("Connessione non riuscita, tentativo " + (i + 1) + "/3");
-                attendi((long) (1000 * Math.pow(2, i)));
-            }
-            i++;
-        }
-
-        if (link == null) {
-            showAlert("Impossibile collegarsi al server");
-            return;
-        }
-
-        MandaAlServer = new PrintWriter(link.getOutputStream(), true);
-        RiceviDalServer = new BufferedReader(new InputStreamReader(link.getInputStream()));
 
         // Creazione dei componenti della schermata di login
         Label usernameLabel = new Label("Username:");
@@ -113,6 +96,7 @@ public class ClientMain extends Application {
             String username = usernameField.getText();
             String password = passwordField.getText();
             if (!username.isEmpty() && !password.isEmpty()) {
+                // DA FARE: UN NOME NON PUO CONTENERE "," E "/ù"
                 try {
                     // mando credenziali al server
                     Packet DaInviareAlServer = new Packet("REGISTRA", "", username, password, false);
@@ -140,6 +124,23 @@ public class ClientMain extends Application {
         stage.setTitle("Login");
         stage.setScene(scene);
         stage.show();
+
+        try {
+            // Crea una connessione al server
+            link = new Socket(serverAddress, port);
+        } catch (IOException _) {
+        }
+
+
+        if (link == null) {
+            showAlert("Impossibile collegarsi al server");
+            return;
+        }
+
+        MandaAlServer = new PrintWriter(link.getOutputStream(), true);
+        RiceviDalServer = new BufferedReader(new InputStreamReader(link.getInputStream()));
+
+
     }
 
     // Metodo per aprire la schermata della chat

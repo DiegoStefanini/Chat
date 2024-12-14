@@ -47,17 +47,13 @@ public class ChatPage extends Application {
         pacchetto = gson.fromJson(json, Packet.class);
 
         String[] Chats = pacchetto.getContenuto().split(",\\s*");
-        if (Chats.length > 0)
+        if (Chats.length > 0) {
             for (String chat : Chats) { // per ogni elemento di Chats identificato come chat
                 chatListView.getItems().add(chat);
 
             }
-//        ricezione = true;
-//        new Thread(() -> {
-//            while (ricezione) {
-//
-//            }
-//        } ).start();
+        }
+
         // Campo di testo per la ricerca dell'utente
         TextField searchField = new TextField();
         searchField.setPromptText("Cerca utente");
@@ -80,7 +76,13 @@ public class ChatPage extends Application {
 
         // Bottone per creare un gruppo
         Button createGroupButton = new Button("Crea Gruppo");
-        createGroupButton.setOnAction(e -> createGroup());
+        createGroupButton.setOnAction(e -> {
+            try {
+                creaGruppo();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
         // Layout della schermata della chat
         VBox chatLayout = new VBox(10);
@@ -108,7 +110,7 @@ public class ChatPage extends Application {
                         throw new RuntimeException(ex);
                     }
                 } else {
-                    showAlert("Errore", "Seleziona una chat!");
+                    Controller.showAlert("errore", "Errore", "Seleziona una chat!");
                 }
             }
         });
@@ -124,7 +126,7 @@ public class ChatPage extends Application {
                         throw new RuntimeException(ex);
                     }
                 } else {
-                    showAlert("Errore", "Seleziona una chat!");
+                    Controller.showAlert("errore", "Errore", "Seleziona una chat!");
                 }
             }
         });
@@ -141,7 +143,7 @@ public class ChatPage extends Application {
         // Puoi implementare la logica per la ricerca dell'utente
         for (String chat : lista.getItems()) {
             if (target.equals(chat)) {
-                showAlert("ERRORE","Hai già una chat avviata con questo utente");
+                Controller.showAlert("errore", "ERRORE","Hai già una chat avviata con questo utente");
                 return;
             }
         }
@@ -151,16 +153,18 @@ public class ChatPage extends Application {
         json = RiceviDalServer.readLine();
         pacchetto = gson.fromJson(json, Packet.class);
         if (pacchetto.getError()) {
-            showAlert("Errore", pacchetto.getContenuto());
+            Controller.showAlert("errore", "Errore", pacchetto.getContenuto());
         } else {
                 lista.getItems().add(target);
         }
     }
 
     // Metodo per creare un gruppo
-    private void createGroup() {
+    private void creaGruppo() throws IOException {
         // Puoi implementare la logica per la creazione di un gruppo
-
+        CreaGruppo crea = new CreaGruppo(MandaAlServer, RiceviDalServer, gson, NomeClient, Chatsstage);
+        crea.start(new Stage());
+        Chatsstage.close();
     }
 
     // Metodo per aprire la finestra della chat specifica
@@ -171,12 +175,12 @@ public class ChatPage extends Application {
     }
 
     // Metodo per mostrare un alert in caso di errore
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
+//    private void showAlert(String title, String message) {
+//        Alert alert = new Alert(Alert.AlertType.ERROR);
+//        alert.setTitle(title);
+//        alert.setHeaderText(null);
+//        alert.setContentText(message);
+//        alert.showAndWait();
+//    }
 
 }

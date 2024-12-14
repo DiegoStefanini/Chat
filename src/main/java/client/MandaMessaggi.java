@@ -32,12 +32,7 @@ public class MandaMessaggi extends Application {
         Target = tar;
         Precedente = prec;
     }
-    public void attendi(long ms) {
-        try {
-            Thread.sleep(ms);
-        } catch (InterruptedException _) {
-        }
-    }
+
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -80,6 +75,7 @@ public class MandaMessaggi extends Application {
         inputField.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
                 String message = inputField.getText().trim();
+                // DA FARE: UN MESSAGGIO NON PUO CONTENERE "/ù"
                 if (!message.isEmpty()) {
                     // Invio del messaggio al server
                     Packet pacchetto = new Packet("MESSAGGIO", Target, NomeClient, message, false);
@@ -103,6 +99,7 @@ public class MandaMessaggi extends Application {
             try {
                 while (ricezione) {
                     String json = RiceviDalServer.readLine();
+                    // DA FARE: CONTROLLARE ERRORE Connection reset (QUANDO IL SERVER SI STOPPA, DA ERRORE, TROVIAMO UN MODO PER CONTROLLARE STA COSA E NON FAR CRASHARE L'APP CHE è BRUTTO <3)
                     if (json != null) {
                         Packet pacchetto = gson.fromJson(json, Packet.class);
                         if ("MESSAGGIO".equals(pacchetto.getHeader()) && pacchetto.getMittente().equals(Target)) {
