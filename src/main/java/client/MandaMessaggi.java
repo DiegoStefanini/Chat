@@ -103,9 +103,12 @@ public class MandaMessaggi extends Application {
                     if (json != null) {
                         Packet pacchetto = gson.fromJson(json, Packet.class);
                         if ("MESSAGGIO".equals(pacchetto.getHeader()) && (pacchetto.getMittente().equals(Target) || pacchetto.getDestinatario().equals(Target)) ) {
-                            Platform.runLater(() -> {
-                                chatListView.getItems().add(pacchetto.getMittente() + ": " + pacchetto.getContenuto());
-                            });
+                            if (!pacchetto.getMittente().equals(NomeClient)) {
+                                Platform.runLater(() -> {
+
+                                    chatListView.getItems().add(pacchetto.getMittente() + ": " + pacchetto.getContenuto());
+                                });
+                            }
                         } else if ("CARICAMESSAGGI".equals(pacchetto.getHeader())) {
                                 String[] Messaggi = pacchetto.getContenuto().split("/ù\\s*");
 
