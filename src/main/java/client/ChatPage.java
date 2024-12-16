@@ -12,9 +12,6 @@ import javafx.geometry.Pos;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 import com.google.gson.Gson;
 
@@ -173,14 +170,5 @@ public class ChatPage extends Application {
         mandamessaggi.start(new Stage());
         Chatsstage.close();
     }
-
-    // Metodo per mostrare un alert in caso di errore
-//    private void showAlert(String title, String message) {
-//        Alert alert = new Alert(Alert.AlertType.ERROR);
-//        alert.setTitle(title);
-//        alert.setHeaderText(null);
-//        alert.setContentText(message);
-//        alert.showAndWait();
-//    }
 
 }

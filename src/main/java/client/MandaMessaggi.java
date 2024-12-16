@@ -93,7 +93,7 @@ public class MandaMessaggi extends Application {
         Packet pacch = new Packet("CARICAMESSAGGI", Target, NomeClient, "", false);
         String tosend = gson.toJson(pacch);
         MandaAlServer.println(tosend);
-        chatListView.getItems().clear(); // Ripulisce la lista  dei messaggi
+        chatListView.getItems().clear(); // Ripulisce la lista dei messaggi
 
         new Thread(() -> {
             try {
@@ -102,7 +102,7 @@ public class MandaMessaggi extends Application {
                     // DA FARE: CONTROLLARE ERRORE Connection reset (QUANDO IL SERVER SI STOPPA, DA ERRORE, TROVIAMO UN MODO PER CONTROLLARE STA COSA E NON FAR CRASHARE L'APP CHE è BRUTTO <3)
                     if (json != null) {
                         Packet pacchetto = gson.fromJson(json, Packet.class);
-                        if ("MESSAGGIO".equals(pacchetto.getHeader()) && pacchetto.getMittente().equals(Target)) {
+                        if ("MESSAGGIO".equals(pacchetto.getHeader()) && (pacchetto.getMittente().equals(Target) || pacchetto.getDestinatario().equals(Target)) ) {
                             Platform.runLater(() -> {
                                 chatListView.getItems().add(pacchetto.getMittente() + ": " + pacchetto.getContenuto());
                             });
