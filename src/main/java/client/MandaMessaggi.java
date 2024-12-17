@@ -10,7 +10,6 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.geometry.Pos;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import com.google.gson.Gson;
@@ -19,25 +18,31 @@ public class MandaMessaggi extends Application {
 
     private final Gson gson;
     private final PrintWriter MandaAlServer;
-    private final BufferedReader RiceviDalServer;
     private final String NomeClient;
-    private final Stage Precedente;
+    private final ChatPage Precedente;
     private final String Target;
-    private boolean ricezione = true;
-    public MandaMessaggi(PrintWriter manda, BufferedReader leggi, Gson g, String nome, String tar, Stage prec) {
+    private BufferPacchetti buffer;
+    ListView<String> chatListView;
+    public MandaMessaggi(PrintWriter manda,  String nome, String tar, ChatPage prec, BufferPacchetti b) {
         MandaAlServer = manda;
-        RiceviDalServer = leggi;
-        gson = g;
+        gson = new Gson();
         NomeClient = nome;
         Target = tar;
         Precedente = prec;
+        buffer = b;
     }
 
-
+    public void aggiungiMessaggio(Packet pacchetto) {
+        if (!pacchetto.getMittente().equals(NomeClient)) {
+            Platform.runLater(() -> {
+                chatListView.getItems().add(pacchetto.getMittente() + ": " + pacchetto.getContenuto());
+            });
+        }
+    }
     @Override
     public void start(Stage stage) throws IOException {
         // Creazione dei componenti per la schermata della chat
-        ListView<String> chatListView = new ListView<>();
+        chatListView = new ListView<>();
 
         TextField inputField = new TextField();
         Button indietroButton = new Button("Indietro");
@@ -62,12 +67,13 @@ public class MandaMessaggi extends Application {
         layout.setBottom(inputField);
         // Azioni sul pulsante "Indietro"
         indietroButton.setOnAction(e -> {
-            Packet pacchetto = new Packet("INTERROMPI", Target, NomeClient, "", false);
-            String json = gson.toJson(pacchetto);
-            MandaAlServer.println(json);
-            ricezione = false;
-            Precedente.show();
-            stage.close(); // Esempio: chiudi la finestra
+            ChatPage chatPage = Precedente;
+            try {
+                chatPage.start(new Stage());
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+            stage.close(); // chiudi la finestra
         });
 
         // Aggiungere messaggi
@@ -94,42 +100,19 @@ public class MandaMessaggi extends Application {
         String tosend = gson.toJson(pacch);
         MandaAlServer.println(tosend);
         chatListView.getItems().clear(); // Ripulisce la lista dei messaggi
-
-        new Thread(() -> {
-            try {
-                while (ricezione) {
-                    String json = RiceviDalServer.readLine();
-                    // DA FARE: CONTROLLARE ERRORE Connection reset (QUANDO IL SERVER SI STOPPA, DA ERRORE, TROVIAMO UN MODO PER CONTROLLARE STA COSA E NON FAR CRASHARE L'APP CHE è BRUTTO <3)
-                    if (json != null) {
-                        Packet pacchetto = gson.fromJson(json, Packet.class);
-                        if ("MESSAGGIO".equals(pacchetto.getHeader()) && (pacchetto.getMittente().equals(Target) || pacchetto.getDestinatario().equals(Target)) ) {
-                            if (!pacchetto.getMittente().equals(NomeClient)) {
-                                Platform.runLater(() -> {
-
-                                    chatListView.getItems().add(pacchetto.getMittente() + ": " + pacchetto.getContenuto());
-                                });
-                            }
-                        } else if ("CARICAMESSAGGI".equals(pacchetto.getHeader())) {
-                                String[] Messaggi = pacchetto.getContenuto().split("/ù\\s*");
-
-                                if (Messaggi.length > 0 && !"".equals(Messaggi[0])) {
-                                    for (String messaggio : Messaggi) {
-                                        Platform.runLater(() -> {
-                                            chatListView.getItems().add(messaggio);
-                                        });
-                                    }
-                                }
-                        } else if ("INTERROMPI".equals(pacchetto.getHeader())) {
-                            ricezione = false;
-                        }
-                    }
-                }
-
-            } catch (IOException ex) {
-                ex.printStackTrace();
+        pacch = null;
+        while (pacch == null) {
+            if (buffer.getLast() != null && buffer.getLast().getHeader().equals("CARICAMESSAGGI")) {
+                pacch = buffer.consuma();
             }
-        }).start();
+        }
+        String[] Messaggi = pacch.getContenuto().split("/ù\\s*");
+        if (Messaggi.length > 0 && !"".equals(Messaggi[0])) {
 
+            for (String messaggio : Messaggi) {
+                chatListView.getItems().add(messaggio);
+            }
+        }
 
         // Impostazioni della scena
         Scene scene = new Scene(layout, 400, 600);

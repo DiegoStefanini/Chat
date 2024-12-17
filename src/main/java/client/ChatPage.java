@@ -2,6 +2,7 @@ package client;
 
 import data.Packet;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -9,9 +10,10 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.geometry.Pos;
 
-import java.io.BufferedReader;
+
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Map;
 
 import com.google.gson.Gson;
 
@@ -19,38 +21,91 @@ public class ChatPage extends Application {
 
     private Gson gson;
     private PrintWriter MandaAlServer;
-    private BufferedReader RiceviDalServer;
     private String NomeClient;
     private Stage Chatsstage;
-    private boolean ricezione;
-    public ChatPage(PrintWriter manda, BufferedReader leggi, Gson g, String nome) {
+    private Ricezione ricezione;
+    private BufferPacchetti buffer;
+    Map<String, Object> Chats;
+    private ListView<String> chatListView;
+    public ChatPage(PrintWriter manda, String nome, BufferPacchetti b, Ricezione r) {
         MandaAlServer = manda;
-        RiceviDalServer = leggi;
-        gson = g;
+        gson = new Gson();
         NomeClient = nome;
+        buffer = b;
+        ricezione = r;
+    }
+
+    public void updateNewMessage(Packet pacchetto) {
+        String mittente = pacchetto.getMittente(); // Recuperiamo il mittente dal pacchetto
+
+        // Controlliamo se il mittente esiste già nella mappa
+        if (Chats.containsKey(mittente)) {
+            // Recuperiamo il valore associato alla chiave del mittente
+            Object value = Chats.get(mittente);
+
+            // Verifica se il valore è un Double, lo converte in Integer
+            if (value instanceof Double) {
+                value = ((Double) value).intValue();  // Converte il Double in Integer
+            }
+
+            if (value instanceof Integer) {
+                // Incrementiamo il valore
+                Chats.put(mittente, (Integer) value + 1);  // Aggiorniamo la mappa
+            }
+        } else {
+            // Se il mittente non esiste nella mappa, possiamo aggiungerlo con un valore di partenza (ad esempio, 1)
+            Chats.put(mittente, 1);
+        }
+        updateChatListView();
+
+        // Ora possiamo aggiornare la vista della chat con i nuovi valori
+    }
+
+
+    private void updateChatListView() {
+        // Aggiorniamo la ListView con i nuovi dati della mappa
+        Platform.runLater(() -> {
+            chatListView.getItems().clear(); // Pulisce la ListView
+        });
+        if (!Chats.isEmpty()) {
+            for (Map.Entry<String, Object> nome : Chats.entrySet()) {
+                Object value = nome.getValue();
+
+                Platform.runLater(() -> {
+                    double doubleValue = (value instanceof Integer) ? ((Integer) value).doubleValue() : (Double) value;
+                    chatListView.getItems().add(nome.getKey() + " [" + ((int) doubleValue) + "]");
+                });
+
+            }
+        }
     }
 
     public void start(Stage stage) throws IOException {
         Packet pacchetto;
         Chatsstage = stage;
+        ricezione.setChatPage(this);
+        System.out.println("target set 0");
+        ricezione.setTarget("");
+
         // Creazione dei componenti per la schermata della chat
-        ListView<String> chatListView = new ListView<>();
+         chatListView = new ListView<>();
 
 
         pacchetto = new Packet("CHAT", "", "", "", false);
         String json = gson.toJson(pacchetto); // converto il pacchetto in JSON
         MandaAlServer.println(json);
-        json = RiceviDalServer.readLine();
-        pacchetto = gson.fromJson(json, Packet.class);
-
-        String[] Chats = pacchetto.getContenuto().split(",\\s*");
-        if (Chats.length > 0) {
-            for (String chat : Chats) { // per ogni elemento di Chats identificato come chat
-                chatListView.getItems().add(chat);
-
+        pacchetto = null;
+        while (pacchetto == null) {
+            if (buffer.getLast() != null && buffer.getLast().getHeader().equals("CHAT")) {
+                pacchetto = buffer.consuma();
             }
         }
 
+        json = pacchetto.getContenuto();
+
+        Chats = gson.fromJson(json, Map.class);
+
+        updateChatListView();
         // Campo di testo per la ricerca dell'utente
         TextField searchField = new TextField();
         searchField.setPromptText("Cerca utente");
@@ -89,7 +144,7 @@ public class ChatPage extends Application {
         VBox.setVgrow(spacer, Priority.ALWAYS); // mette uno spazio tra Bottone cerca gruppo e la fine
 
         chatLayout.getChildren().addAll( // mette in ordine tutti gli elementi della pagina
-                new Label("Cerca un utente:"),
+                new Label("Aggiungi un utente:"),
                 searchLayout, // Campo di ricerca
                 chatListView,
                 createGroupButton,
@@ -100,9 +155,10 @@ public class ChatPage extends Application {
         chatListView.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
                 String selectedChat = chatListView.getSelectionModel().getSelectedItem();
+                selectedChat = selectedChat.split(" ")[0];
                 if (selectedChat != null) {
                     try {
-                        openChatWindow(selectedChat); // Seleziona la chat e apri la finestra della chat
+                        openChatWindow(selectedChat.trim()); // Seleziona la chat e apri la finestra della chat
                     } catch (IOException ex) {
                         throw new RuntimeException(ex);
                     }
@@ -147,26 +203,33 @@ public class ChatPage extends Application {
         Packet pacchetto = new Packet("AVVIACHAT", target, NomeClient, "", false);
         String json = gson.toJson(pacchetto); // converto il pacchetto in JSON
         MandaAlServer.println(json);
-        json = RiceviDalServer.readLine();
-        pacchetto = gson.fromJson(json, Packet.class);
+        pacchetto = null;
+        while (pacchetto == null) {
+            if (buffer.getLast() != null && buffer.getLast().getHeader().equals("AVVIACHAT")) {
+                pacchetto = buffer.consuma();
+            }
+        }
+
         if (pacchetto.getError()) {
             Controller.showAlert("errore", "Errore", pacchetto.getContenuto());
         } else {
-                lista.getItems().add(target);
+            lista.getItems().add(target);
         }
     }
 
     // Metodo per creare un gruppo
     private void creaGruppo() throws IOException {
         // Puoi implementare la logica per la creazione di un gruppo
-        CreaGruppo crea = new CreaGruppo(MandaAlServer, RiceviDalServer, gson, NomeClient, Chatsstage);
+        CreaGruppo crea = new CreaGruppo(MandaAlServer, gson, NomeClient, Chatsstage, buffer, ricezione);
         crea.start(new Stage());
         Chatsstage.close();
     }
 
     // Metodo per aprire la finestra della chat specifica
     private void openChatWindow(String target) throws IOException {
-        MandaMessaggi mandamessaggi = new MandaMessaggi(MandaAlServer, RiceviDalServer, gson, NomeClient, target, Chatsstage);
+        ricezione.setTarget(target);
+        MandaMessaggi mandamessaggi = new MandaMessaggi(MandaAlServer, NomeClient, target, this, buffer);
+        ricezione.setMandaMessaggi(mandamessaggi);
         mandamessaggi.start(new Stage());
         Chatsstage.close();
     }

@@ -10,7 +10,6 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.geometry.Pos;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -21,16 +20,18 @@ public class CreaGruppo extends Application {
 
     private final Gson gson;
     private final PrintWriter MandaAlServer;
-    private final BufferedReader RiceviDalServer;
     private final String NomeClient;
     private final Stage Precedente;
+    private BufferPacchetti buffer;
+    private Ricezione ricezione;
 
-    public CreaGruppo(PrintWriter manda, BufferedReader leggi, Gson g, String nome, Stage prec) {
+    public CreaGruppo(PrintWriter manda, Gson g, String nome, Stage prec, BufferPacchetti b, Ricezione r) {
         MandaAlServer = manda;
-        RiceviDalServer = leggi;
         gson = g;
         NomeClient = nome;
         Precedente = prec;
+        buffer = b;
+        ricezione = r;
     }
 
     @Override
@@ -122,7 +123,7 @@ public class CreaGruppo extends Application {
                     Packet pacch = new Packet("CREAGRUPPO", partecipanti.toString(), "", nomeGruppo, false);
                     String tosend = gson.toJson(pacch);
                     MandaAlServer.println(tosend);
-                    ChatPage chatPage = new ChatPage(MandaAlServer, RiceviDalServer, gson, NomeClient);
+                    ChatPage chatPage = new ChatPage(MandaAlServer, NomeClient, buffer, ricezione);
                     try {
                         chatPage.start(new Stage());
                     } catch (IOException ex) {
@@ -137,10 +138,13 @@ public class CreaGruppo extends Application {
         Packet pacch = new Packet("GETALLUSERS", "", NomeClient, "", false);
         String tosend = gson.toJson(pacch);
         MandaAlServer.println(tosend);
-        String json = RiceviDalServer.readLine();
-        Packet pacchetto = gson.fromJson(json, Packet.class);
-
-        String[] AllUsers = pacchetto.getContenuto().split(",\\s*");
+        pacch = null;
+        while (pacch == null) {
+            if (buffer.getLast() != null && buffer.getLast().getHeader().equals("AVVIACHAT")) {
+                pacch = buffer.consuma();
+            }
+        }
+        String[] AllUsers = pacch.getContenuto().split(",\\s*");
         for (String utente : AllUsers) {
             if (!utente.equals(NomeClient)) {
                 Platform.runLater(() -> usersListView.getItems().add(utente));

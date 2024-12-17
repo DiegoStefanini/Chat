@@ -145,7 +145,11 @@ public class ClientMain extends Application {
 
     // Metodo per aprire la schermata della chat
     private void openChatPage() throws IOException {
-        ChatPage chatPage = new ChatPage(MandaAlServer, RiceviDalServer, gson, NomeClient);
+        BufferPacchetti buffer = new BufferPacchetti();
+        Ricezione r = new Ricezione(buffer, RiceviDalServer);
+        Thread ThreadRicezione = new Thread(r);
+        ThreadRicezione.start();
+        ChatPage chatPage = new ChatPage(MandaAlServer, NomeClient, buffer, r);
         chatPage.start(new Stage()); // Crea e avvia la schermata della chat
         primaryStage.close(); // Chiudi la schermata di login
     }
