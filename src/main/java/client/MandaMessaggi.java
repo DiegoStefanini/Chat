@@ -82,7 +82,7 @@ public class MandaMessaggi extends Application {
             if (event.getCode() == KeyCode.ENTER) {
                 String message = inputField.getText().trim();
                 // DA FARE: UN MESSAGGIO NON PUO CONTENERE "/ù"
-                if (!message.isEmpty()) {
+                if (!message.isEmpty() ) {
                     // Invio del messaggio al server
                     Packet pacchetto = new Packet("MESSAGGIO", Target, NomeClient, message, false);
                     String json = gson.toJson(pacchetto);

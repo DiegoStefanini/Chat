@@ -220,7 +220,8 @@ public class ChatPage extends Application {
     // Metodo per creare un gruppo
     private void creaGruppo() throws IOException {
         // Puoi implementare la logica per la creazione di un gruppo
-        CreaGruppo crea = new CreaGruppo(MandaAlServer, gson, NomeClient, Chatsstage, buffer, ricezione);
+        System.out.println("nuovo ! ");
+        CreaGruppo crea = new CreaGruppo(MandaAlServer, gson, NomeClient, this, buffer, ricezione);
         crea.start(new Stage());
         Chatsstage.close();
     }

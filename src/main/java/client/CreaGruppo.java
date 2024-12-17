@@ -21,11 +21,11 @@ public class CreaGruppo extends Application {
     private final Gson gson;
     private final PrintWriter MandaAlServer;
     private final String NomeClient;
-    private final Stage Precedente;
+    private final ChatPage Precedente;
     private BufferPacchetti buffer;
     private Ricezione ricezione;
 
-    public CreaGruppo(PrintWriter manda, Gson g, String nome, Stage prec, BufferPacchetti b, Ricezione r) {
+    public CreaGruppo(PrintWriter manda, Gson g, String nome, ChatPage prec, BufferPacchetti b, Ricezione r) {
         MandaAlServer = manda;
         gson = g;
         NomeClient = nome;
@@ -101,7 +101,12 @@ public class CreaGruppo extends Application {
 
         // Azione del pulsante "Indietro"
         indietroButton.setOnAction(e -> {
-            Precedente.show();
+            ChatPage chatPage = Precedente;
+            try {
+                chatPage.start(new Stage());
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
             stage.close(); // Torna alla finestra precedente
         });
 
@@ -140,7 +145,7 @@ public class CreaGruppo extends Application {
         MandaAlServer.println(tosend);
         pacch = null;
         while (pacch == null) {
-            if (buffer.getLast() != null && buffer.getLast().getHeader().equals("AVVIACHAT")) {
+            if (buffer.getLast() != null && buffer.getLast().getHeader().equals("GETALLUSERS")) {
                 pacch = buffer.consuma();
             }
         }

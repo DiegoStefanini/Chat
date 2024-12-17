@@ -15,6 +15,8 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import data.Packet;
 public class ClientMain extends Application {
+    private String serverAddress = "127.0.0.1"; // IP del server
+    private int port = 12345;
     private Stage primaryStage;
     private Gson gson;
     private PrintWriter MandaAlServer;
@@ -23,12 +25,6 @@ public class ClientMain extends Application {
     private String NomeClient;
     private Label errorLabel; // Label per il messaggio di errore
 
-    public void attendi(long ms) {
-        try {
-            Thread.sleep(ms);
-        } catch (InterruptedException _) {
-        }
-    }
     public void stop() throws Exception {
         if (link != null) {
             Packet DaInviareAlServer = new Packet("LOGOUT", "", "", "", false);
@@ -36,12 +32,10 @@ public class ClientMain extends Application {
             MandaAlServer.println(json);
         }
     }
+
     public void start(Stage stage) throws IOException {
         primaryStage = stage;
         gson = new Gson();
-        String serverAddress = "127.0.0.1"; // IP del server
-        int port = 12345;
-
 
         // Creazione dei componenti della schermata di login
         Label usernameLabel = new Label("Username:");
@@ -66,8 +60,8 @@ public class ClientMain extends Application {
 
         // Azione del login
         loginButton.setOnAction(e -> {
-            String username = usernameField.getText();
-            String password = passwordField.getText();
+            String username = usernameField.getText().trim();
+            String password = passwordField.getText().trim();
             if (!username.isEmpty() && !password.isEmpty()) {
                 try {
                     // mando credenziali al server
@@ -93,10 +87,10 @@ public class ClientMain extends Application {
 
         // Azione della registrazione
         registerButton.setOnAction(e -> {
-            String username = usernameField.getText();
-            String password = passwordField.getText();
+            String username = usernameField.getText().trim();
+            String password = passwordField.getText().trim();
             if (!username.isEmpty() && !password.isEmpty()) {
-                // DA FARE: UN NOME NON PUO CONTENERE "," E "/ù"
+                // DA FARE: UN NOME NON PUO CONTENERE "," E "/ù" e caratteri speciali in generale
                 try {
                     // mando credenziali al server
                     Packet DaInviareAlServer = new Packet("REGISTRA", "", username, password, false);
