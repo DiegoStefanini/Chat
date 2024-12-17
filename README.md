@@ -10,26 +10,23 @@ Questo progetto implementa un sistema di chat client-server con funzionalità di
 Requisiti:
 
   - Java 11 o superiore.
+  - Maven
+  - Java FX
   - Database MySQL (o equivalente).
 
 Librerie Necessarie:
-  - Gson per la manipolazione di JSON.
+  - Gson per la manipolazione di JSON (com.google.code.gson).
   - Dipendenze JavaFX (se non integrate nel JDK).
+  - mysql
+Configurazione database:
+  - Avvia xampp (o qualsiasi programma simile) e i servizi Apache o Mysql.
+  - Importa il database "chat.sql" (se si usa xampp vai su http://localhost/phpmyadmin/  --> Importa).
     
-Server:
-  - IP e Porta configurabili (default: 79.35.203.96, porta 12345).
-  - Accesso al database per memorizzare utenti, messaggi e gruppi.
+Configurazione Server:
+  - Configura la porta sulla quale vuoi far collegare il client (default: 12345) nel ServerMain.java.
+  - Configura URL, USER e PASSWORD nel ServerMain.java per la connessione al database.
 
-Istruzioni per l'Uso: Configurazione del Server
-  Configura il file del database con:
-    - Tabella utenti (username, password).
-    - Tabella chat (chat_id, chat_name, partecipanti).
-    - Tabella messaggi (id, chat_id, mittente, contenuto, timestamp).
-    - Avvia il server e specifica l’IP e la porta.
-
-Configurazione del Client: 
-Modifica l’indirizzo IP e la porta del server nel file ClientMain
-
-Compila ed esegui il progetto:
-  - Login: Inserisci le credenziali di un account esistente.
-  - Registrazione: Crea un nuovo account.
+Configurazione Client: 
+  - Nel ClientMain.java configura serverAddres e port (se si lascia default la porta nel server e si avvia il ServerMain sulla stessa macchina del ClientMain non c'è bisongno di cambiare)
+    
+Compila ed esegui prima il ServerMain, e poi il ClientMain
