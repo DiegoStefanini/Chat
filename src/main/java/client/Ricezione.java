@@ -29,7 +29,6 @@ public class Ricezione implements Runnable {
     }
 
     public synchronized void setTarget(String how) {
-        System.out.println("target set " + how);
         target = how;
     }
 

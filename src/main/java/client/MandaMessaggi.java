@@ -82,7 +82,7 @@ public class MandaMessaggi extends Application {
             if (event.getCode() == KeyCode.ENTER) {
                 String message = inputField.getText().trim();
                 // DA FARE: UN MESSAGGIO NON PUO CONTENERE "/ù"
-                if (!message.isEmpty() ) {
+                if (!message.isEmpty() && !message.contains("/ù")) {
                     // Invio del messaggio al server
                     Packet pacchetto = new Packet("MESSAGGIO", Target, NomeClient, message, false);
                     String json = gson.toJson(pacchetto);
@@ -91,8 +91,8 @@ public class MandaMessaggi extends Application {
                     // Mostrare il messaggio nella chat
                     chatListView.getItems().add("Tu: " + message);
                     inputField.clear();
-
-
+                } else {
+                    Controller.showAlert("errore", "messaggio non valido", "non puoi mandare un messaggio vuoto !");
                 }
             }
         });

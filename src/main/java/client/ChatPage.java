@@ -84,7 +84,6 @@ public class ChatPage extends Application {
         Packet pacchetto;
         Chatsstage = stage;
         ricezione.setChatPage(this);
-        System.out.println("target set 0");
         ricezione.setTarget("");
 
         // Creazione dei componenti per la schermata della chat
